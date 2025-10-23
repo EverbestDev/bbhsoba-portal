@@ -5,6 +5,7 @@ import SubjectSelection from "./Components/SubjectSelection";
 import ExamPage from "./Components/ExamPage";
 
 export default function App() {
+  const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(
     () => JSON.parse(localStorage.getItem("isLoggedIn")) || false
   );
@@ -17,6 +18,11 @@ export default function App() {
   const [currentStep, setCurrentStep] = useState(
     () => localStorage.getItem("currentStep") || "login"
   );
+
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem("isLoggedIn", JSON.stringify(isLoggedIn));
@@ -34,6 +40,17 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("currentStep", currentStep);
   }, [currentStep]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-white">
+        <div className="relative">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-emerald-200"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-emerald-600 absolute top-0"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     if (currentStep !== "login") setCurrentStep("login");

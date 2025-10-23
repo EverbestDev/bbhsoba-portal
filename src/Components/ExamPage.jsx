@@ -296,7 +296,7 @@ function ExamPage({
                 onClick={onBack}
                 className="w-full bg-green-600 hover:bg-green-700 text-white py-4 rounded-lg font-bold uppercase tracking-wide transition shadow-md"
               >
-                Return to Dashboard
+                Logout
               </button>
             </div>
           </div>
