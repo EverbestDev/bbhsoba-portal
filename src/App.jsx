@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import LoginPage from "./Components/LoginPage";
 import ClassSelection from "./Components/ClassSelection";
 import SubjectSelection from "./Components/SubjectSelection";
-import ExamPage from "./Components/ExamPage";
+import ExamPage from "./Components/ExamPage/ExamPage"; // adjust path
+import Sidebar from "./Components/Sidebar";
 
 export default function App() {
   const [loading, setLoading] = useState(true);
@@ -41,6 +42,13 @@ export default function App() {
     localStorage.setItem("currentStep", currentStep);
   }, [currentStep]);
 
+  const handleLogout = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+
+  const showBack = currentStep === "subject" || currentStep === "exam";
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-white">
@@ -52,56 +60,67 @@ export default function App() {
     );
   }
 
-  if (!isLoggedIn) {
-    if (currentStep !== "login") setCurrentStep("login");
-    return (
-      <LoginPage
-        onLogin={() => {
-          setIsLoggedIn(true);
-          setCurrentStep("class");
-        }}
-      />
-    );
-  }
-
-  if (!selectedClass) {
-    if (currentStep !== "class") setCurrentStep("class");
-    return (
-      <ClassSelection
-        onSelectClass={(cls) => {
-          setSelectedClass(cls);
-          setCurrentStep("subject");
-        }}
-      />
-    );
-  }
-
-  if (selectedSubjects.length === 0) {
-    if (currentStep !== "subject") setCurrentStep("subject");
-    return (
-      <SubjectSelection
-        selectedClass={selectedClass}
-        onBack={() => {
-          setSelectedClass(null);
-          setCurrentStep("class");
-        }}
-        onStartExam={(subs) => {
-          setSelectedSubjects(subs);
-          setCurrentStep("exam");
-        }}
-      />
-    );
-  }
-
-  if (currentStep !== "exam") setCurrentStep("exam");
   return (
-    <ExamPage
-      selectedClass={selectedClass}
-      selectedSubjects={selectedSubjects}
-      onBack={() => {
-        setSelectedSubjects([]);
-        setCurrentStep("subject");
-      }}
-    />
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar – only when logged in */}
+      {isLoggedIn && (
+        <Sidebar
+          onLogout={handleLogout}
+          showBack={showBack}
+          onBack={() => {
+            if (currentStep === "exam") {
+              setSelectedSubjects([]);
+              setCurrentStep("subject");
+            } else if (currentStep === "subject") {
+              setSelectedClass(null);
+              setCurrentStep("class");
+            }
+          }}
+          currentStep={currentStep}
+        />
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 lg:ml-64">
+        <div className="p-4 lg:p-8">
+          {!isLoggedIn ? (
+            <LoginPage
+              onLogin={() => {
+                setIsLoggedIn(true);
+                setCurrentStep("class");
+              }}
+            />
+          ) : !selectedClass ? (
+            <ClassSelection
+              onSelectClass={(cls) => {
+                setSelectedClass(cls);
+                setCurrentStep("subject");
+              }}
+            />
+          ) : selectedSubjects.length === 0 ? (
+            <SubjectSelection
+              selectedClass={selectedClass}
+              onBack={() => {
+                setSelectedClass(null);
+                setCurrentStep("class");
+              }}
+              onStartExam={(subs) => {
+                setSelectedSubjects(subs);
+                setCurrentStep("exam");
+              }}
+            />
+          ) : (
+            <ExamPage
+              selectedClass={selectedClass}
+              selectedSubjects={selectedSubjects}
+              onBack={() => {
+                setSelectedSubjects([]);
+                setCurrentStep("subject");
+              }}
+            />
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
