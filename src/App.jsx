@@ -96,6 +96,7 @@ export default function App() {
   if (currentStep !== "exam") setCurrentStep("exam");
   return (
     <ExamPage
+      selectedClass={selectedClass}
       selectedSubjects={selectedSubjects}
       onBack={() => {
         setSelectedSubjects([]);
