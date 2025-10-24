@@ -6,7 +6,7 @@ import {
   Clock,
   ArrowLeft,
 } from "lucide-react";
-import { CLASS_NAMES, SUBJECTS } from "./constants";
+import { CLASS_NAMES, SUBJECTS } from "../constants";
 
 export default function SubjectSelection({
   selectedClass,

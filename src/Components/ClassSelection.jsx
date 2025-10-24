@@ -1,6 +1,6 @@
 import React from "react";
 import { BookOpen, Users, ChevronRight } from "lucide-react";
-import { CLASS_NAMES, SUBJECTS } from "./constants";
+import { CLASS_NAMES, SUBJECTS } from "../constants";
 
 export default function ClassSelection({ onSelectClass }) {
   const classes = Object.keys(CLASS_NAMES);
