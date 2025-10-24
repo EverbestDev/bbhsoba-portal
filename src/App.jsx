@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import LoginPage from "./Components/LoginPage";
 import ClassSelection from "./Components/ClassSelection";
 import SubjectSelection from "./Components/SubjectSelection";
-import ExamPage from "./Components/ExamPage/ExamPage"; // adjust path
+import ExamPage from "./Components/ExamPage/index.jsx";
 import Sidebar from "./Components/Sidebar";
 
 export default function App() {
