@@ -47,7 +47,7 @@ export default function App() {
     window.location.reload();
   };
 
-  const showBack = currentStep === "subject" || currentStep === "exam";
+  const showBack = currentStep === "subject" || currentStep === "class";
 
   if (loading) {
     return (
@@ -62,7 +62,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar – only when logged in */}
+      {/* Sidebar*/}
       {isLoggedIn && (
         <Sidebar
           onLogout={handleLogout}

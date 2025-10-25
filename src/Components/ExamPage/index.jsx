@@ -7,10 +7,10 @@ import QuestionCard from "./QuestionCard";
 import NavigationButtons from "./NavigationButtons";
 import WarningModal from "./WarningModal";
 import SubmitModal from "./SubmitModal";
-import ResultsTable from "./ResultsTable";
+import ResultsReview from "./ResultsTable";
 
 function ExamPage({ selectedClass, selectedSubjects, onBack }) {
-  // --- STATE (saved in localStorage) ---
+  // --- STATE ---
   const [currentSubjectIndex, setCurrentSubjectIndex] = useState(() => {
     const saved = localStorage.getItem("exam_currentSubjectIndex");
     return saved ? Number(saved) : 0;
@@ -23,16 +23,16 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
     const saved = localStorage.getItem("exam_answers");
     return saved ? JSON.parse(saved) : {};
   });
-  const [timeLeft, setTimeLeft] = useState(() => {
-    const saved = localStorage.getItem("exam_timeLeft");
-    return saved ? Number(saved) : 600;
-  });
+  const [timeLeft, setTimeLeft] = useState(600);
   const [submitted, setSubmitted] = useState(false);
   const [subjectResults, setSubjectResults] = useState([]);
   const [showWarning, setShowWarning] = useState(false);
   const [showConfirmSubmit, setShowConfirmSubmit] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
   const [warningColor, setWarningColor] = useState("yellow");
+
+  const [hasShown2Min, setHasShown2Min] = useState(false);
+  const [hasShown1Min, setHasShown1Min] = useState(false);
 
   const currentSubject = selectedSubjects[currentSubjectIndex];
   const [questions, setQuestions] = useState([]);
@@ -51,15 +51,19 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
     localStorage.setItem("exam_answers", JSON.stringify(answers));
   }, [answers]);
 
+  // Save timeLeft per subject
   useEffect(() => {
-    localStorage.setItem("exam_timeLeft", timeLeft);
-  }, [timeLeft]);
+    if (currentSubject) {
+      localStorage.setItem(`exam_timeLeft_${currentSubject}`, timeLeft);
+    }
+  }, [timeLeft, currentSubject]);
 
-  // --- LOAD QUESTIONS ---
+  // --- LOAD QUESTIONS & TIMER ---
   useEffect(() => {
     const allQs = QUESTIONS[selectedClass]?.[currentSubject] || [];
     const savedQ = localStorage.getItem(`exam_questions_${currentSubject}`);
     const savedD = localStorage.getItem(`exam_displayed_${currentSubject}`);
+    const savedTime = localStorage.getItem(`exam_timeLeft_${currentSubject}`);
 
     if (savedQ && savedD) {
       setQuestions(JSON.parse(savedQ));
@@ -83,9 +87,21 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
       );
     }
 
-    const savedTime = localStorage.getItem("exam_timeLeft");
-    if (!savedTime || Number(savedTime) === 600) setTimeLeft(600);
+    // Restore saved time or start fresh
+    const initialTime = savedTime ? Number(savedTime) : 600;
+    setTimeLeft(initialTime > 0 ? initialTime : 600);
+
+    // Reset warning flags
+    setHasShown2Min(false);
+    setHasShown1Min(false);
   }, [currentSubject, selectedClass]);
+
+  // --- SAVE TIMER PER SUBJECT ---
+  useEffect(() => {
+    if (currentSubject) {
+      localStorage.setItem(`exam_timeLeft_${currentSubject}`, timeLeft);
+    }
+  }, [timeLeft, currentSubject]);
 
   // --- TIMER ---
   useEffect(() => {
@@ -100,18 +116,44 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
 
   // --- WARNINGS ---
   useEffect(() => {
-    if (timeLeft <= 120 && timeLeft > 60) {
+    if (timeLeft <= 120 && timeLeft > 60 && !hasShown2Min) {
       setWarningMessage("2 minutes remaining!");
       setWarningColor("yellow");
       setShowWarning(true);
-    } else if (timeLeft <= 60 && timeLeft > 0) {
+      setHasShown2Min(true);
+      playBeep(600, 400);
+    } else if (timeLeft <= 60 && timeLeft > 0 && !hasShown1Min) {
       setWarningMessage("1 minute left! Submit now!");
       setWarningColor("red");
       setShowWarning(true);
-    } else {
+      setHasShown1Min(true);
+      playBeep(1000, 600);
+    } else if (timeLeft <= 0) {
       setShowWarning(false);
     }
-  }, [timeLeft]);
+  }, [timeLeft, hasShown2Min, hasShown1Min]);
+
+  // --- BEEP SOUND ---
+  const playBeep = (freq = 800, duration = 300) => {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+    const oscillator = audioCtx.createOscillator();
+    const gainNode = audioCtx.createGain();
+
+    oscillator.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+
+    oscillator.frequency.value = freq;
+    oscillator.type = "sine";
+    gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(
+      0.01,
+      audioCtx.currentTime + duration / 1000
+    );
+
+    oscillator.start();
+    oscillator.stop(audioCtx.currentTime + duration / 1000);
+  };
 
   // --- HANDLERS ---
   const handleAnswer = (option) => {
@@ -188,25 +230,42 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
     ]);
     setSubmitted(true);
 
-    // Cleanup
+    // ✅ DO NOT DELETE exam_displayed and exam_answers yet!
+    // They are needed for ResultsReview component
+
+    // Only remove timer data and navigation state
     selectedSubjects.forEach((sub) => {
       localStorage.removeItem(`exam_questions_${sub}`);
-      localStorage.removeItem(`exam_displayed_${sub}`);
+      localStorage.removeItem(`exam_timeLeft_${sub}`);
     });
-    [
-      "exam_currentSubjectIndex",
-      "exam_currentQuestionIndex",
-      "exam_answers",
-      "exam_timeLeft",
-    ].forEach((key) => localStorage.removeItem(key));
+
+    // Remove navigation state only
+    localStorage.removeItem("exam_currentSubjectIndex");
+    localStorage.removeItem("exam_currentQuestionIndex");
   };
 
-  // --- RENDER ---
-  if (submitted) {
-    return <ResultsTable results={subjectResults} onBack={onBack} />;
-  }
+  // ✅ NEW: Cleanup function when user goes back from results
+  const handleBackFromResults = () => {
+    // NOW we can safely delete the exam data
+    selectedSubjects.forEach((sub) => {
+      localStorage.removeItem(`exam_displayed_${sub}`);
+    });
+    localStorage.removeItem("exam_answers");
 
-  const answeredCount = Object.keys(answers[currentSubject] || {}).length;
+    // Call the original onBack
+    onBack();
+  };
+
+  if (submitted) {
+    return (
+      <ResultsReview
+        results={subjectResults}
+        selectedClass={selectedClass}
+        selectedSubjects={selectedSubjects}
+        onBack={handleBackFromResults}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-white">
@@ -225,11 +284,7 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
         }}
       />
 
-      <ExamHeader
-        subject={currentSubject}
-        timeLeft={timeLeft}
-        onExit={onBack}
-      />
+      <ExamHeader subject={currentSubject} timeLeft={timeLeft} />
 
       <div className="max-w-6xl mx-auto px-4 md:px-8 py-8 grid md:grid-cols-4 gap-6">
         <SubjectSidebar
