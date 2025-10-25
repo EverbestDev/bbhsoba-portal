@@ -66,7 +66,7 @@ export default function ResultsReview({
   }, [overallScore]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 max-w-sm sm:max-w-full px-auto">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-4 max-w-sm sm:min-w-full px-auto">
       <div className=" max-w-full md:max-w-6xl mx-auto">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -112,7 +112,7 @@ export default function ResultsReview({
         {activeTab === "summary" && (
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="overflow-x-auto">
-              <table className="table-auto border-collapse max-w-full">
+              <table className="min-w-full table-auto border-collapse">
                 <thead>
                   <tr className="bg-green-600 text-white">
                     <th className="px-4 py-3 text-left whitespace-nowrap">
