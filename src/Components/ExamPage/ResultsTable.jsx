@@ -15,7 +15,7 @@ export default function ResultsReview({
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [answers, setAnswers] = useState({});
 
-  // Load answers from localStorage
+  // Load answers from loc
   useEffect(() => {
     const saved = localStorage.getItem("exam_answers");
     if (saved) {

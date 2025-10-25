@@ -87,7 +87,6 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
       );
     }
 
-    // Restore saved time or start fresh
     const initialTime = savedTime ? Number(savedTime) : 600;
     setTimeLeft(initialTime > 0 ? initialTime : 600);
 
@@ -230,29 +229,22 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
     ]);
     setSubmitted(true);
 
-    // ✅ DO NOT DELETE exam_displayed and exam_answers yet!
-    // They are needed for ResultsReview component
 
-    // Only remove timer data and navigation state
     selectedSubjects.forEach((sub) => {
       localStorage.removeItem(`exam_questions_${sub}`);
       localStorage.removeItem(`exam_timeLeft_${sub}`);
     });
 
-    // Remove navigation state only
     localStorage.removeItem("exam_currentSubjectIndex");
     localStorage.removeItem("exam_currentQuestionIndex");
+    localStorage.setItem("currentStep", "results");
   };
 
-  // ✅ NEW: Cleanup function when user goes back from results
   const handleBackFromResults = () => {
-    // NOW we can safely delete the exam data
     selectedSubjects.forEach((sub) => {
       localStorage.removeItem(`exam_displayed_${sub}`);
     });
     localStorage.removeItem("exam_answers");
-
-    // Call the original onBack
     onBack();
   };
 
