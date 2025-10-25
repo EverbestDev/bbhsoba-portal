@@ -1,3 +1,9 @@
+
+useEffect(() => {
+  if (currentSubject) {
+    localStorage.setItem(`exam_timeLeft_${currentSubject}`, timeLeft);
+  }
+}, [timeLeft, currentSubject]);
 import React, { useState, useEffect } from "react";
 import { QUESTIONS } from "../../constants";
 import { shuffleArray } from "../../utils";
@@ -23,7 +29,10 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
     const saved = localStorage.getItem("exam_answers");
     return saved ? JSON.parse(saved) : {};
   });
-  const [timeLeft, setTimeLeft] = useState(600);
+  const [timeLeft, setTimeLeft] = useState(() => {
+    const savedTime = localStorage.getItem("exam_timeLeft_global");
+    return savedTime ? Number(savedTime) : 600;
+  });
   const [submitted, setSubmitted] = useState(false);
   const [subjectResults, setSubjectResults] = useState([]);
   const [showWarning, setShowWarning] = useState(false);
@@ -51,12 +60,10 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
     localStorage.setItem("exam_answers", JSON.stringify(answers));
   }, [answers]);
 
-  // Save timeLeft per subject
+  // Save global timer
   useEffect(() => {
-    if (currentSubject) {
-      localStorage.setItem(`exam_timeLeft_${currentSubject}`, timeLeft);
-    }
-  }, [timeLeft, currentSubject]);
+    localStorage.setItem("exam_timeLeft_global", timeLeft);
+  }, [timeLeft]);
 
   // --- LOAD QUESTIONS & TIMER ---
   useEffect(() => {
@@ -86,21 +93,11 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
         JSON.stringify(selected)
       );
     }
-
     const initialTime = savedTime ? Number(savedTime) : 600;
     setTimeLeft(initialTime > 0 ? initialTime : 600);
-
-    // Reset warning flags
     setHasShown2Min(false);
     setHasShown1Min(false);
   }, [currentSubject, selectedClass]);
-
-  // --- SAVE TIMER PER SUBJECT ---
-  useEffect(() => {
-    if (currentSubject) {
-      localStorage.setItem(`exam_timeLeft_${currentSubject}`, timeLeft);
-    }
-  }, [timeLeft, currentSubject]);
 
   // --- TIMER ---
   useEffect(() => {
@@ -228,16 +225,12 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
       },
     ]);
     setSubmitted(true);
-
-
     selectedSubjects.forEach((sub) => {
       localStorage.removeItem(`exam_questions_${sub}`);
       localStorage.removeItem(`exam_timeLeft_${sub}`);
     });
-
     localStorage.removeItem("exam_currentSubjectIndex");
     localStorage.removeItem("exam_currentQuestionIndex");
-    localStorage.setItem("currentStep", "results");
   };
 
   const handleBackFromResults = () => {
