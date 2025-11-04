@@ -61,66 +61,73 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar*/}
+    <div className="min-h-screen bg-gray-50">
       {isLoggedIn && (
-        <Sidebar
-          onLogout={handleLogout}
-          showBack={showBack}
-          onBack={() => {
-            if (currentStep === "exam") {
-              setSelectedSubjects([]);
-              setCurrentStep("subject");
-            } else if (currentStep === "subject") {
-              setSelectedClass(null);
-              setCurrentStep("class");
-            }
-          }}
-          currentStep={currentStep}
-        />
-      )}
-
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-64">
-        <div className="p-4 lg:p-8">
-          {!isLoggedIn ? (
-            <LoginPage
-              onLogin={() => {
-                setIsLoggedIn(true);
-                setCurrentStep("class");
-              }}
-            />
-          ) : !selectedClass ? (
-            <ClassSelection
-              onSelectClass={(cls) => {
-                setSelectedClass(cls);
-                setCurrentStep("subject");
-              }}
-            />
-          ) : selectedSubjects.length === 0 ? (
-            <SubjectSelection
-              selectedClass={selectedClass}
-              onBack={() => {
-                setSelectedClass(null);
-                setCurrentStep("class");
-              }}
-              onStartExam={(subs) => {
-                setSelectedSubjects(subs);
-                setCurrentStep("exam");
-              }}
-            />
-          ) : (
-            <ExamPage
-              selectedClass={selectedClass}
-              selectedSubjects={selectedSubjects}
-              onBack={() => {
+        <div className="flex">
+          <Sidebar
+            onLogout={handleLogout}
+            showBack={showBack}
+            onBack={() => {
+              if (currentStep === "exam") {
                 setSelectedSubjects([]);
                 setCurrentStep("subject");
-              }}
-            />
-          )}
+              } else if (currentStep === "subject") {
+                setSelectedClass(null);
+                setCurrentStep("class");
+              }
+            }}
+            currentStep={currentStep}
+          />
+
+          {/* Main Content - With Sidebar Offset */}
+          <div className="flex-1 lg:ml-64">
+            <div className="p-4 lg:p-8">
+              {!selectedClass ? (
+                <ClassSelection
+                  onSelectClass={(cls) => {
+                    setSelectedClass(cls);
+                    setCurrentStep("subject");
+                  }}
+                />
+              ) : selectedSubjects.length === 0 ? (
+                <SubjectSelection
+                  selectedClass={selectedClass}
+                  onBack={() => {
+                    setSelectedClass(null);
+                    setCurrentStep("class");
+                  }}
+                  onStartExam={(subs) => {
+                    setSelectedSubjects(subs);
+                    localStorage.setItem("currentStep", "exam");
+                    setCurrentStep("exam");
+                  }}
+                />
+              ) : (
+                <ExamPage
+                  selectedClass={selectedClass}
+                  selectedSubjects={selectedSubjects}
+                  onBack={() => {
+                    setSelectedSubjects([]);
+                    setCurrentStep("subject");
+                  }}
+                />
+              )}
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* LOGIN PAGE - FULL WIDTH, NO SIDEBAR */}
+      {!isLoggedIn && (
+        <div className="flex items-center justify-center min-h-screen p-4">
+          <LoginPage
+            onLogin={() => {
+              setIsLoggedIn(true);
+              setCurrentStep("class");
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }

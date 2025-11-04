@@ -21,7 +21,7 @@ export default function LoginPage({ onLogin }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-white flex items-center justify-center p-2">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-yellow-50 to-white flex items-center justify-center p-4">
       <div className="w-full max-w-3xl bg-white rounded-lg shadow-xl overflow-hidden">
         <div className="grid md:grid-cols-2 gap-0 flex-col-reverse md:flex-none">
           <div className="p-4 md:p-6 bg-gray-50 flex flex-col justify-center">

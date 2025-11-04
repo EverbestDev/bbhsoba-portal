@@ -23,8 +23,9 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
     return saved ? JSON.parse(saved) : {};
   });
   const [timeLeft, setTimeLeft] = useState(() => {
-    const savedTime = localStorage.getItem("exam_timeLeft_global");
-    return savedTime ? Number(savedTime) : 600;
+    const saved = localStorage.getItem("exam_timeLeft_global");
+    if (saved) return Number(saved);
+    return selectedSubjects.length * 300; // 5 mins per subject
   });
   const [submitted, setSubmitted] = useState(false);
   const [subjectResults, setSubjectResults] = useState([]);
@@ -221,14 +222,18 @@ function ExamPage({ selectedClass, selectedSubjects, onBack }) {
     localStorage.removeItem("exam_timeLeft_global");
     localStorage.removeItem("exam_currentSubjectIndex");
     localStorage.removeItem("exam_currentQuestionIndex");
+    localStorage.removeItem("exam_answers");
     localStorage.setItem("currentStep", "results");
+    localStorage.removeItem("selectedSubjects");
   };
 
   const handleBackFromResults = () => {
+    // NOW SAFE TO DELETE ORIGINAL QUESTIONS
     selectedSubjects.forEach((sub) => {
       localStorage.removeItem(`exam_displayed_${sub}`);
     });
-    localStorage.removeItem("exam_answers");
+    localStorage.removeItem("selectedSubjects");
+    localStorage.removeItem("currentStep");
     onBack();
   };
 
